@@ -8,6 +8,10 @@ Code to compare classification algorithms on various datasets
 - [Installation & Usage](#installation--usage)
 
 ## Results & Demos
+<div style="text-align: center;">
+    <img src="./MNIST/tsne_visualization.png" alt="t-SNE Visualization of MNIST Predictions">
+    <p><em>Figure 1: t-SNE Visualization of MNIST Predictions</em></p>
+</div>
 
 ## Repository Structure
 - Each top-level directory specifies the dataset used for the comparison
