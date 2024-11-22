@@ -1,6 +1,7 @@
 import time
 
 import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.datasets import fetch_openml
 from sklearn.manifold import TSNE
 from sklearn.metrics import accuracy_score
@@ -152,22 +153,22 @@ def visualize_tsne(X, predictions, title="t-SNE Visualization of Predictions"):
     )
     X_tsne = tsne.fit_transform(X)
 
-    # Create high quality scatter plot
+    # Create high quality scatter plot using Seaborn
     plt.figure(figsize=(12, 10), dpi=300)  # Increased resolution
-    scatter = plt.scatter(
-        X_tsne[:, 0],
-        X_tsne[:, 1],
-        c=predictions,
-        cmap="tab10",
+    scatter = sns.scatterplot(
+        x=X_tsne[:, 0],
+        y=X_tsne[:, 1],
+        hue=predictions,
+        palette="tab10",
         alpha=0.8,  # Increased opacity
         s=100,  # Larger point size
         edgecolor="black",  # Add black edges to points
         linewidth=0.5,  # Thin edge lines
+        legend="full"
     )
 
     # Improve colorbar and labels
-    cbar = plt.colorbar(scatter)
-    cbar.set_label("Class", fontsize=12)
+    scatter.legend(title="Class", fontsize=12)
 
     plt.title(title, fontsize=14, pad=20)
     plt.xlabel("t-SNE Component 1", fontsize=12)
