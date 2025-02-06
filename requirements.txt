@@ -1,4 +1,9 @@
 matplotlib
 pandas
-scikit-learn
+numpy
+seaborn
+joblib
 tqdm
+umap-learn
+scikit-learn
+torch
