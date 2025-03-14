@@ -8,7 +8,23 @@ import numpy as np
 #   - Loads the mnist dataset and returns it as a dictionary with keys 'train', 'val', and 'test' splits.
 def load_mnist(test_size=0.2, val_size=0.2, random_state=42):
     mnist = fetch_openml("mnist_784", version=1)
-    X, y = mnist["data"], mnist["target"].astype(int)
+    X = (
+        mnist["data"].to_numpy()
+        if hasattr(mnist["data"], "to_numpy")
+        else mnist["data"]
+    )
+    y = (
+        mnist["target"].astype(int).to_numpy()
+        if hasattr(mnist["target"], "to_numpy")
+        else mnist["target"].astype(int)
+    )
+
+    # Analyze dataset properties
+    num_samples = X.shape[0]
+    pixels = X.shape[1]
+    side_length = int(np.sqrt(pixels))
+    input_shape = (1, side_length, side_length)  # (channels, height, width)
+    num_classes = len(np.unique(y))
 
     # Split into train+val and test
     X_temp, X_test, y_temp, y_test = train_test_split(
@@ -24,29 +40,34 @@ def load_mnist(test_size=0.2, val_size=0.2, random_state=42):
         "train": (X_train, y_train),
         "val": (X_val, y_val),
         "test": (X_test, y_test),
+        "metadata": {
+            "input_shape": input_shape,
+            "num_classes": num_classes,
+            "num_samples": num_samples,
+            "dataset_name": "MNIST",
+        },
     }
 
 
 # `load_tiny_imagenet(test_size=0.2, val_size=0.2, random_state=42) -->
 #   - Loads the tiny-imagenet dataset and returns it as a dictionary with keys 'train', 'val', and 'test' splits.
 def load_tiny_imagenet(test_size=0.2, val_size=0.2, random_state=42):
-    # Load the dataset from Hugging Face
     dataset = load_dataset("zh-plus/tiny-imagenet")
 
-    # Convert images to consistent format (RGB)
     def process_image(img):
-        # Convert to RGB if not already
         if img.mode != "RGB":
             img = img.convert("RGB")
-        # Resize if needed (shouldn't be necessary for Tiny ImageNet)
         return np.array(img)
 
-    # Extract images and labels, ensuring consistent format
     X_full = np.array([process_image(img["image"]) for img in dataset["train"]])
     y_full = np.array([img["label"] for img in dataset["train"]])
 
+    # Analyze dataset properties
+    num_samples = X_full.shape[0]
+    input_shape = (3, X_full.shape[1], X_full.shape[2])  # (channels, height, width)
+    num_classes = len(np.unique(y_full))
+
     # Reshape images to be flat
-    # Original shape: (N, H, W, C) -> New shape: (N, H*W*C)
     X_full_flat = X_full.reshape(X_full.shape[0], -1)
 
     # Split into train+val and test
@@ -59,16 +80,14 @@ def load_tiny_imagenet(test_size=0.2, val_size=0.2, random_state=42):
         X_temp, y_temp, test_size=val_size, random_state=random_state
     )
 
-    # Store original image shape for reshaping later if needed
-    original_shape = X_full.shape[1:]
-
     return {
         "train": (X_train, y_train),
         "val": (X_val, y_val),
         "test": (X_test, y_test),
         "metadata": {
-            "original_shape": original_shape,
-            "num_classes": len(np.unique(y_full)),
+            "input_shape": input_shape,
+            "num_classes": num_classes,
+            "num_samples": num_samples,
             "dataset_name": "tiny-imagenet",
         },
     }

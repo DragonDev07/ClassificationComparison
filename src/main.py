@@ -14,23 +14,24 @@ def main():
     X_train, y_train = data["train"]
     X_val, y_val = data["val"]
     X_test, y_test = data["test"]
+    metadata = data["metadata"]
 
     # ---------- Classification Tree ---------- #
-    # print("<< === Classification Tree === >>")
-    # clf_tree = ClassificationTree(base_max_depth=3)
-    # clf_tree.dataset_name = "MNIST"
+    print("<< === Classification Tree === >>")
+    clf_tree = ClassificationTree(base_max_depth=3)
+    clf_tree.dataset_name = "MNIST"
 
-    # print("--> Loading Model")
-    # clf_tree.load()
+    print("--> Loading Model")
+    clf_tree.load()
 
-    # # print("--> Training Model")
-    # # clf_tree.train(X_train, y_train)
+    print("--> Training Model")
+    clf_tree.train(X_train, y_train)
 
-    # # print("--> Pruning Model")
-    # # clf_tree.prune(X_val, y_val)
+    print("--> Pruning Model")
+    clf_tree.prune(X_val, y_val)
 
-    # # print("--> Saving Model")
-    # # clf_tree.save()
+    print("--> Saving Model")
+    clf_tree.save()
 
     # print("--> Running Predictions")
     # predictions = clf_tree.predict(X_test)
@@ -49,8 +50,11 @@ def main():
     cnn = CNN(epochs=20, batch_size=64)
     cnn.dataset_name = "MNIST"
 
+    # print("--> Loading Model")
+    # cnn.load()
+
     print("--> Training Model")
-    cnn.train(X_train, y_train, X_val, y_val)
+    cnn.train(X_train, y_train, X_val, y_val, metadata)
 
     print("--> Saving Model")
     cnn.save()
