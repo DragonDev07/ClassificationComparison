@@ -1,5 +1,7 @@
 from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 from datasets import load_dataset
 import numpy as np
 

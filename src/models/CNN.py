@@ -89,7 +89,7 @@ class CNN:
         self.epochs = epochs
         self.batch_size = batch_size
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.dataset_name = None
+        self.dataset_name = "Unknown"
         self.base_path = "../out"
         self.input_shape = None
         self.num_classes = None
@@ -104,9 +104,7 @@ class CNN:
         os.makedirs(viz_dir, exist_ok=True)
 
         # Generate the base name for files
-        base_name = f"CNN_{self.epochs}epochs"
-        if self.dataset_name:
-            base_name += f"_{self.dataset_name}"
+        base_name = f"CNN_{self.epochs}epochs_{self.dataset_name}"
 
         # Generate complete paths
         model_path = f"{model_dir}/{base_name}.joblib"
@@ -188,7 +186,7 @@ class CNN:
 
     # `predict(X)` -->
     #   - Make predictions using the trained model
-    def predict(self, X):
+    def predict(self, X, batch_size=16):
         self.model.eval()
         X = self._preprocess_data(X)
         X = torch.FloatTensor(X).to(self.device)
@@ -258,7 +256,7 @@ class CNN:
         self.input_shape = config["input_shape"]
         self.num_classes = config["num_classes"]
 
-        print(f"Loaded model configuration:")
+        print("Loaded model configuration:")
         print(f"Input shape: {self.input_shape}")
         print(f"Number of classes: {self.num_classes}")
 
@@ -296,9 +294,12 @@ class CNN:
     #   - Helper method to measure prediction speed
     def _measure_prediction_speed(self, X_test, n_trials=100):
         self.model.eval()
-        X_test = torch.FloatTensor(X_test)
-        total_time = 0
 
+        # Preprocess the data first
+        X_test = self._preprocess_data(X_test)
+        X_test = torch.FloatTensor(X_test)
+
+        total_time = 0
         with torch.no_grad():
             for _ in tqdm(range(n_trials)):
                 start_time = time.time()

@@ -1,5 +1,4 @@
 import time
-import numpy as np
 import joblib
 import os
 import matplotlib.pyplot as plt
@@ -16,7 +15,7 @@ class ClassificationTree:
         self.base_max_depth = base_max_depth
         self.random_state = random_state
         self.model = None
-        self.dataset_name = None
+        self.dataset_name = "Unknown"
         self.is_grid_search = False
         self.base_path = "../out"
 
@@ -30,9 +29,7 @@ class ClassificationTree:
         os.makedirs(viz_dir, exist_ok=True)
 
         # Generate the base name for files
-        base_name = f"ClassificationTree{'_GridSearch' if self.is_grid_search else ''}"
-        if self.dataset_name:
-            base_name += f"_{self.dataset_name}"
+        base_name = f"ClassificationTree{'_GridSearch' if self.is_grid_search else ''}_{self.dataset_name}"
 
         # Generate complete paths
         model_path = f"{model_dir}/{base_name}.joblib"
@@ -42,8 +39,7 @@ class ClassificationTree:
 
     # `train(X_train, y_train) -->
     #   - Directly train the model without grid search
-    def train(self, X_train, y_train, dataset_name="Unknown"):
-        self.dataset_name = dataset_name
+    def train(self, X_train, y_train):
         self.is_grid_search = False
 
         # Initialize the model
@@ -59,8 +55,7 @@ class ClassificationTree:
 
     # `grid_train(X_train, y_train) -->
     #   - Train the model using grid search
-    def grid_train(self, X_train, y_train, dataset_name="Unknown"):
-        self.dataset_name = dataset_name
+    def grid_train(self, X_train, y_train):
         self.is_grid_search = True
 
         # Define the parameter grid
@@ -204,7 +199,7 @@ class ClassificationTree:
     def load(self, filename=None):
         if filename is None:
             # Generate paths if filename is not provided
-            model_path, *_ = self._generate_paths()  # Use *_ to catch all other paths
+            model_path, *_ = self._generate_paths()
             filename = model_path
 
         # Load the model from the file
