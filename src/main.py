@@ -5,12 +5,13 @@ from utils.Datasets import load_mnist, load_tiny_imagenet
 
 def main():
     print("<< === Loading Data === >>")
-    print("--> Loading tiny-imagenet")
-    data = load_tiny_imagenet()
-    # print("--> Loading MNIST")
-    # data = load_mnist()
+    # print("--> Loading tiny-imagenet")
+    # data = load_tiny_imagenet()
+    print("--> Loading MNIST")
+    data = load_mnist()
 
     # Separate data into sets
+    dataset_name = data["name"]
     X_train, y_train = data["train"]
     X_val, y_val = data["val"]
     X_test, y_test = data["test"]
@@ -19,19 +20,11 @@ def main():
     # ---------- Classification Tree ---------- #
     print("<< === Classification Tree === >>")
     clf_tree = ClassificationTree(base_max_depth=3)
-    clf_tree.dataset_name = "tiny-imagenet"
+    clf_tree.dataset_name = dataset_name
+    clf_tree.is_grid_search = True
 
-    # print("--> Loading Model")
-    # clf_tree.load()
-
-    print("--> Training Model")
-    clf_tree.train(X_train, y_train)
-
-    print("--> Pruning Model")
-    clf_tree.prune(X_val, y_val)
-
-    print("--> Saving Model")
-    clf_tree.save()
+    print("--> Loading Model")
+    clf_tree.load()
 
     print("--> Running Predictions")
     predictions = clf_tree.predict(X_test)
@@ -48,7 +41,7 @@ def main():
     # --------- CNN Deep Learning ---------- #
     print("<< === CNN Deep Learning === >>")
     cnn = CNN(epochs=20, batch_size=64)
-    cnn.dataset_name = "tiny-imagenet"
+    cnn.dataset_name = dataset_name
 
     # print("--> Loading Model")
     # cnn.load()

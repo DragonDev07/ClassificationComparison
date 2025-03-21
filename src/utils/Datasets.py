@@ -39,6 +39,7 @@ def load_mnist(test_size=0.2, val_size=0.2, random_state=42):
     )
 
     return {
+        "name": "MNIST",
         "train": (X_train, y_train),
         "val": (X_val, y_val),
         "test": (X_test, y_test),
@@ -83,6 +84,7 @@ def load_tiny_imagenet(test_size=0.2, val_size=0.2, random_state=42):
     )
 
     return {
+        "name": "tiny-imagenet",
         "train": (X_train, y_train),
         "val": (X_val, y_val),
         "test": (X_test, y_test),

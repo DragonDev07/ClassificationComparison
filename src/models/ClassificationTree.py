@@ -55,7 +55,7 @@ class ClassificationTree:
 
     # `grid_train(X_train, y_train) -->
     #   - Train the model using grid search
-    def grid_train(self, X_train, y_train):
+    def grid_train(self, X_train, y_train, n_jobs=None):
         self.is_grid_search = True
 
         # Define the parameter grid
@@ -76,8 +76,8 @@ class ClassificationTree:
             estimator=base_classifier,
             param_grid=param_grid,
             cv=5,
-            n_jobs=-1,
             verbose=3,
+            n_jobs=n_jobs,
         )
 
         # Fit the grid search
