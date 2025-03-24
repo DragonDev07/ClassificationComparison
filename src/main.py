@@ -5,10 +5,10 @@ from utils.Datasets import load_mnist, load_tiny_imagenet
 
 def main():
     print("<< === Loading Data === >>")
-    # print("--> Loading tiny-imagenet")
-    # data = load_tiny_imagenet()
-    print("--> Loading MNIST")
-    data = load_mnist()
+    print("--> Loading tiny-imagenet")
+    data = load_tiny_imagenet()
+    # print("--> Loading MNIST")
+    # data = load_mnist()
 
     # Separate data into sets
     dataset_name = data["name"]
@@ -18,29 +18,29 @@ def main():
     metadata = data["metadata"]
 
     # ---------- Classification Tree ---------- #
-    print("<< === Classification Tree === >>")
-    clf_tree = ClassificationTree(base_max_depth=3)
-    clf_tree.dataset_name = dataset_name
-    clf_tree.is_grid_search = True
+    # print("<< === Classification Tree === >>")
+    # clf_tree = ClassificationTree(base_max_depth=3)
+    # clf_tree.dataset_name = dataset_name
+    # clf_tree.is_grid_search = True
 
-    print("--> Loading Model")
-    clf_tree.load()
+    # print("--> Loading Model")
+    # clf_tree.load()
 
-    print("--> Running Predictions")
-    predictions = clf_tree.predict(X_test)
+    # print("--> Running Predictions")
+    # predictions = clf_tree.predict(X_test)
 
-    print("--> Generating UMAP")
-    clf_tree.generate_umap(X_test, predictions)
+    # print("--> Generating UMAP")
+    # clf_tree.generate_umap(X_test, predictions)
 
-    print("--> Evaluating Model")
-    clf_tree_evaluation = clf_tree.evaluate(X_test, y_test)
+    # print("--> Evaluating Model")
+    # clf_tree_evaluation = clf_tree.evaluate(X_test, y_test)
 
-    print("\n----- RESULTS -----")
-    print(f"Accuracy: {clf_tree_evaluation['accuracy']}")
+    # print("\n----- RESULTS -----")
+    # print(f"Accuracy: {clf_tree_evaluation['accuracy']}")
 
     # --------- CNN Deep Learning ---------- #
     print("<< === CNN Deep Learning === >>")
-    cnn = CNN(epochs=20, batch_size=64)
+    cnn = CNN(epochs=40, batch_size=64)
     cnn.dataset_name = dataset_name
 
     # print("--> Loading Model")

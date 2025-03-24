@@ -89,6 +89,9 @@ class CNN:
         self.epochs = epochs
         self.batch_size = batch_size
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        if torch.cuda.is_available():
+            gpu = torch.cuda.get_device_name(0)
+            print(f"GPU: {gpu}")
         self.dataset_name = "Unknown"
         self.base_path = "../out"
         self.input_shape = None
@@ -186,14 +189,24 @@ class CNN:
 
     # `predict(X)` -->
     #   - Make predictions using the trained model
-    def predict(self, X, batch_size=16):
+    def predict(self, X, batch_size=None):
         self.model.eval()
         X = self._preprocess_data(X)
-        X = torch.FloatTensor(X).to(self.device)
+        X = torch.FloatTensor(X)
+        dataset = TensorDataset(X)
+        dataloader = DataLoader(
+            dataset, batch_size=batch_size if batch_size else self.batch_size
+        )
+        predictions = []
 
         with torch.no_grad():
-            predictions = self.model(X).argmax(dim=1).cpu().numpy()
-        return predictions
+            for batch in dataloader:
+                batch = batch[0].to(self.device)
+                output = self.model(batch)
+                pred = output.argmax(dim=1).cpu().numpy()
+                predictions.append(pred)
+
+        return np.concatenate(predictions)
 
     # `generate_umap(X, predictions)` -->
     #   - Generate and save UMAP visualization
@@ -203,7 +216,9 @@ class CNN:
         # Reshape the array
         X_flat = X.reshape(X.shape[0], -1)
 
-        reducer = umap.UMAP(n_neighbors=15, min_dist=0.1, n_components=2, n_jobs=-1)
+        reducer = umap.UMAP(
+            n_neighbors=15, min_dist=0.1, n_components=2, n_jobs=-1, random_state=42
+        )
         X_umap = reducer.fit_transform(X_flat)
 
         plt.figure(figsize=(12, 10), dpi=300)
@@ -219,12 +234,22 @@ class CNN:
             legend="full",
         )
 
+        # Adjust legend and labels
         scatter.legend(title="Class", fontsize=12)
         plt.title("UMAP Visualization of Predictions", fontsize=14, pad=20)
         plt.xlabel("UMAP Component 1", fontsize=12)
         plt.ylabel("UMAP Component 2", fontsize=12)
+
+        # Adjust the layout with specific spacing
         plt.grid(True, alpha=0.3)
-        plt.tight_layout()
+        plt.subplots_adjust(
+            top=0.95,
+            bottom=0.1,
+            left=0.1,
+            right=0.9,
+        )
+
+        # Save the plot
         plt.savefig(umap_path, dpi=300, bbox_inches="tight")
         plt.close()
 
@@ -299,11 +324,19 @@ class CNN:
         X_test = self._preprocess_data(X_test)
         X_test = torch.FloatTensor(X_test)
 
+        # Create DataLoader for batched processing
+        dataset = TensorDataset(X_test)
+        dataloader = DataLoader(dataset, batch_size=self.batch_size)
+
         total_time = 0
         with torch.no_grad():
             for _ in tqdm(range(n_trials)):
-                start_time = time.time()
-                self.model(X_test.to(self.device))
-                total_time += time.time() - start_time
+                batch_times = []
+                for batch in dataloader:
+                    batch = batch[0].to(self.device)
+                    start_time = time.time()
+                    self.model(batch)
+                    batch_times.append(time.time() - start_time)
+                total_time += sum(batch_times)
 
         return total_time / n_trials
