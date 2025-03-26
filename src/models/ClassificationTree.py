@@ -3,8 +3,15 @@ import joblib
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.metrics import accuracy_score
-from sklearn.model_selection import GridSearchCV, cross_val_score
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    confusion_matrix,
+    classification_report,
+)
+from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
 from tqdm import tqdm
 import umap
@@ -130,17 +137,23 @@ class ClassificationTree:
     #       - Cross-validation score
     #       - Accuracy score
     #       - Prediction speed
-    def evaluate(self, X_test, y_test, cv=5):
-        cv_score = cross_val_score(self.model, X_test, y_test, cv=cv).mean()
-        predictions = self.model.predict(X_test)
-        accuracy = accuracy_score(y_test, predictions)
-        prediction_speed = self._measure_prediction_speed(X_test)
+    def evaluate(self, X_test, y_test):
+        # Get predictions
+        predictions = self.predict(X_test)
 
-        return {
-            "cv_score": cv_score,
-            "accuracy": accuracy,
-            "prediction_speed": prediction_speed,
+        # Calculate metrics
+        results = {
+            # Basic Metrics
+            "accuracy": accuracy_score(y_test, predictions),
+            "precision": precision_score(y_test, predictions, average="weighted"),
+            "recall": recall_score(y_test, predictions, average="weighted"),
+            "f1": f1_score(y_test, predictions, average="weighted"),
+            "confusion_matrix": confusion_matrix(y_test, predictions),
+            "classification_report": classification_report(y_test, predictions),
+            "prediction_speed": self._measure_prediction_speed(X_test),
         }
+
+        return results
 
     # `predict(X)` -->
     #   - Predict the class labels for the given data

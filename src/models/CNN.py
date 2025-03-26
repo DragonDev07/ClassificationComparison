@@ -12,6 +12,15 @@ import seaborn as sns
 from tqdm import tqdm
 import umap
 
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    confusion_matrix,
+    classification_report,
+)
+
 
 class CNNModel(nn.Module):
     def __init__(self, in_channels=1, num_classes=10):
@@ -182,10 +191,51 @@ class CNN:
     # `evaluate(X_test, y_test)` -->
     #   - Evaluate the model accuracy and prediction speed
     def evaluate(self, X_test, y_test):
-        accuracy = self._evaluate_accuracy(X_test, y_test)
-        prediction_speed = self._measure_prediction_speed(X_test)
+        self.model.eval()
 
-        return {"accuracy": accuracy, "prediction_speed": prediction_speed}
+        # Preprocess the data
+        X_test = self._preprocess_data(X_test)
+        X_test = torch.FloatTensor(X_test)
+        y_test = torch.LongTensor(y_test)
+
+        # Create data loader
+        test_dataset = TensorDataset(X_test, y_test)
+        test_loader = DataLoader(test_dataset, batch_size=self.batch_size)
+
+        # Initialize lists to store predictions and true labels
+        all_predictions = []
+        all_targets = []
+
+        with torch.no_grad():
+            for data, target in test_loader:
+                data, target = data.to(self.device), target.to(self.device)
+                outputs = self.model(data)
+                _, predicted = torch.max(outputs.data, 1)
+
+                # Collect predictions and targets
+                all_predictions.extend(predicted.cpu().numpy())
+                all_targets.extend(target.cpu().numpy())
+
+        # Convert to numpy arrays
+        all_predictions = np.array(all_predictions)
+        all_targets = np.array(all_targets)
+
+        # Calculate metrics
+        results = {
+            "accuracy": accuracy_score(all_targets, all_predictions),
+            "precision": precision_score(
+                all_targets, all_predictions, average="weighted"
+            ),
+            "recall": recall_score(all_targets, all_predictions, average="weighted"),
+            "f1": f1_score(all_targets, all_predictions, average="weighted"),
+            "confusion_matrix": confusion_matrix(all_targets, all_predictions),
+            "classification_report": classification_report(
+                all_targets, all_predictions
+            ),
+            "prediction_speed": self._measure_prediction_speed(X_test),
+        }
+
+        return results
 
     # `predict(X)` -->
     #   - Make predictions using the trained model
