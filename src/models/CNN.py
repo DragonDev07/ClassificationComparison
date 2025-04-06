@@ -1,25 +1,25 @@
-import time
-import numpy as np
 import os
+import time
+
 import joblib
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torch.utils.data import DataLoader, TensorDataset
-import matplotlib.pyplot as plt
-import seaborn as sns
-from tqdm import tqdm
 import umap
-
 from sklearn.metrics import (
     accuracy_score,
+    classification_report,
+    confusion_matrix,
+    f1_score,
     precision_score,
     recall_score,
-    f1_score,
-    confusion_matrix,
-    classification_report,
 )
+from torch.utils.data import DataLoader, TensorDataset
+from tqdm import tqdm
 
 
 class CNNModel(nn.Module):
@@ -201,7 +201,6 @@ class CNN:
         X_test = torch.FloatTensor(X_test)
         y_test = torch.LongTensor(y_test)
 
-        # Create data loader
         test_dataset = TensorDataset(X_test, y_test)
         test_loader = DataLoader(test_dataset, batch_size=self.batch_size)
 
@@ -223,8 +222,12 @@ class CNN:
         all_predictions = np.array(all_predictions)
         all_targets = np.array(all_targets)
 
+        # Get resource metrics
+        resource_metrics = self._measure_prediction_speed(X_test)
+
         # Calculate metrics
         results = {
+            # Basic Metrics
             "accuracy": accuracy_score(all_targets, all_predictions),
             "precision": precision_score(
                 all_targets, all_predictions, average="weighted", zero_division=0
@@ -239,7 +242,10 @@ class CNN:
             "classification_report": classification_report(
                 all_targets, all_predictions, zero_division=0
             ),
-            "prediction_speed": self._measure_prediction_speed(X_test),
+            # System Resource Metrics
+            "prediction_speed": resource_metrics["prediction_time"],
+            "cpu_usage": resource_metrics["cpu_usage"],
+            "memory_usage": resource_metrics["memory_usage"],
         }
 
         return results
@@ -391,17 +397,19 @@ class CNN:
     # `_measure_prediction_speed(X_test, n_trials=100)` -->
     #   - Helper method to measure prediction speed
     def _measure_prediction_speed(self, X_test, n_trials=100):
-        self.model.eval()
+        from utils.ResourceMonitor import ResourceMonitor
 
-        # Preprocess the data first
+        monitor = ResourceMonitor()
+
+        self.model.eval()
         X_test = self._preprocess_data(X_test)
         X_test = torch.FloatTensor(X_test)
-
-        # Create DataLoader for batched processing
         dataset = TensorDataset(X_test)
         dataloader = DataLoader(dataset, batch_size=self.batch_size)
 
         total_time = 0
+        monitor.start()
+
         with torch.no_grad():
             for _ in tqdm(range(n_trials)):
                 batch_times = []
@@ -409,7 +417,14 @@ class CNN:
                     batch = batch[0].to(self.device)
                     start_time = time.time()
                     self.model(batch)
+                    monitor._collect_metrics()
                     batch_times.append(time.time() - start_time)
                 total_time += sum(batch_times)
 
-        return total_time / n_trials
+        resources = monitor.stop()
+
+        return {
+            "prediction_time": total_time / n_trials,
+            "cpu_usage": resources["cpu_usage"],
+            "memory_usage": resources["memory_usage"],
+        }

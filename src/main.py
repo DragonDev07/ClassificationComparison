@@ -45,16 +45,17 @@ def main():
     print(f"F1 Score: {clf_tree_evaluation['f1']:.4f}")
     print(f"Prediction Speed: {clf_tree_evaluation['prediction_speed']:.4f} seconds")
 
+    print("\n----- SYSTEM USAGE -----")
+    print(f"CPU Usage: {clf_tree_evaluation['cpu_usage']:.2f}%")
+    print(f"Memory Usage: {clf_tree_evaluation['memory_usage']:.2f} MB")
+
     # --------- CNN Deep Learning ---------- #
     print("<< === CNN Deep Learning === >>")
     cnn = CNN(epochs=60, batch_size=64)
     cnn.dataset_name = dataset_name
 
-    print("--> Training Model")
-    cnn.train(X_train, y_train, X_val, y_val, metadata)
-
-    print("--> Saving Model")
-    cnn.save()
+    print("--> Loading Model")
+    cnn.load()
 
     print("--> Running Predictions")
     cnn_predictions = cnn.predict(X_test)
@@ -74,6 +75,10 @@ def main():
     print(f"Recall: {cnn_evaluation['recall']:.4f}")
     print(f"F1 Score: {cnn_evaluation['f1']:.4f}")
     print(f"Prediction Speed: {cnn_evaluation['prediction_speed']:.4f} seconds")
+
+    print("\n----- SYSTEM USAGE -----")
+    print(f"CPU Usage: {cnn_evaluation['cpu_usage']:.2f}%")
+    print(f"Memory Usage: {cnn_evaluation['memory_usage']:.2f} MB")
 
 
 if __name__ == "__main__":

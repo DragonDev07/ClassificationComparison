@@ -1,21 +1,22 @@
-import time
-import joblib
 import os
+import time
+
+import joblib
 import matplotlib.pyplot as plt
+import numpy as np
 import seaborn as sns
+import umap
 from sklearn.metrics import (
     accuracy_score,
+    classification_report,
+    confusion_matrix,
+    f1_score,
     precision_score,
     recall_score,
-    f1_score,
-    confusion_matrix,
-    classification_report,
 )
 from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
 from tqdm import tqdm
-import umap
-import numpy as np
 
 
 class ClassificationTree:
@@ -139,8 +140,9 @@ class ClassificationTree:
     #       - Accuracy score
     #       - Prediction speed
     def evaluate(self, X_test, y_test):
-        # Get predictions
+        # Get predictions and timing/resource metrics
         predictions = self.predict(X_test)
+        resource_metrics = self._measure_prediction_speed(X_test)
 
         # Calculate metrics
         results = {
@@ -151,7 +153,10 @@ class ClassificationTree:
             "f1": f1_score(y_test, predictions, average="weighted"),
             "confusion_matrix": confusion_matrix(y_test, predictions),
             "classification_report": classification_report(y_test, predictions),
-            "prediction_speed": self._measure_prediction_speed(X_test),
+            # System Resource Metrics
+            "prediction_speed": resource_metrics["prediction_time"],
+            "cpu_usage": resource_metrics["cpu_usage"],
+            "memory_usage": resource_metrics["memory_usage"],
         }
 
         return results
@@ -247,9 +252,22 @@ class ClassificationTree:
     # `_measure_prediction_speed(self, X_test, n_trials=100)` -->
     #    - Helper function to measure average prediction speed
     def _measure_prediction_speed(self, X_test, n_trials=100):
+        from utils.ResourceMonitor import ResourceMonitor
+
+        monitor = ResourceMonitor()
+        monitor.start()
+
         total_time = 0
         for _ in tqdm(range(n_trials)):
             start_time = time.time()
             self.model.predict(X_test)
+            monitor._collect_metrics()
             total_time += time.time() - start_time
-        return total_time / n_trials
+
+        resources = monitor.stop()
+
+        return {
+            "prediction_time": total_time / n_trials,
+            "cpu_usage": resources["cpu_usage"],
+            "memory_usage": resources["memory_usage"],
+        }
