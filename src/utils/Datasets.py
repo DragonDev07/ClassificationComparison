@@ -1,9 +1,7 @@
 import numpy as np
 from datasets import load_dataset
 from sklearn.datasets import fetch_openml
-from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
 
 
 # `load_mnist(test_size=0.2, val_size=0.2, random_state=42) -->

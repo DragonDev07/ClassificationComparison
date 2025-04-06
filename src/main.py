@@ -21,7 +21,7 @@ def main():
     print("<< === Classification Tree === >>")
     clf_tree = ClassificationTree(base_max_depth=3)
     clf_tree.dataset_name = dataset_name
-    clf_tree.is_grid_search = True
+    clf_tree.is_grid_search = False
 
     print("--> Loading Model")
     clf_tree.load()

@@ -212,10 +212,16 @@ class ClassificationTree:
         ax.spines["right"].set_visible(True)
         ax.spines["top"].set_visible(True)
 
-        # Set title and labels with enhanced styling
+        # Create main title and subtitle
+        main_title = f"{self.dataset_name}{' GridSearch' if self.is_grid_search else ''} Classification Tree"
+        subtitle = "UMAP Visualization of Predictions"
         ax.set_title(
-            "UMAP Visualization of Predictions", pad=20, fontsize=14, fontweight="bold"
+            f"$\\mathbf{{{main_title.replace(' ', '\\ ')}}}$\n$\\it{{{subtitle.replace(' ', '\\ ')}}}$",
+            pad=20,
+            fontsize=14,
         )
+
+        # Set axes labels
         ax.set_xlabel("UMAP Component 1", fontsize=12)
         ax.set_ylabel("UMAP Component 2", fontsize=12)
 
