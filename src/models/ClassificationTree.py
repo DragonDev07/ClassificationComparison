@@ -15,6 +15,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
 from tqdm import tqdm
 import umap
+import numpy as np
 
 
 class ClassificationTree:
@@ -161,40 +162,64 @@ class ClassificationTree:
         return self.model.predict(X)
 
     # `generate_umap(X, predictions, save_path=None)` -->
-    #   - Generate UMAP visualization
+    #   - Generate UMAP visualization using seaborn
     def generate_umap(self, X, predictions):
-        # Get save path
+        # Get save path and setup number of classes
         _, umap_path = self._generate_paths()
+        unique_classes = np.unique(predictions)
+        n_classes = len(unique_classes)
 
-        # Initialize UMAP reducer
-        reducer = umap.UMAP(n_neighbors=15, min_dist=0.1, n_components=2, n_jobs=-1)
-        X_umap = reducer.fit_transform(X)
+        # Initialize UMAP reducer and transform data
+        reducer = umap.UMAP(n_neighbors=15, min_dist=0.1, n_components=2)
+        umap_result = reducer.fit_transform(X)
 
-        # Initialize plot
-        plt.figure(figsize=(12, 10), dpi=300)
-        scatter = sns.scatterplot(
-            x=X_umap[:, 0],
-            y=X_umap[:, 1],
+        # Setup style once
+        sns.set_style(
+            "darkgrid",
+            {
+                "axes.edgecolor": "0.2",
+                "axes.linewidth": 1.5,
+                "grid.color": "0.75",
+                "grid.linestyle": "-",
+            },
+        )
+
+        # Create figure and plot
+        fig, ax = plt.subplots(figsize=(12, 10), dpi=300)
+
+        # Plot data
+        sns.scatterplot(
+            x=umap_result[:, 0],
+            y=umap_result[:, 1],
             hue=predictions,
-            palette="tab10",
+            palette="husl" if n_classes > 20 else "tab10",
             alpha=0.8,
             s=100,
             edgecolor="black",
             linewidth=0.5,
-            legend="full",
+            legend="auto",
+            ax=ax,
         )
 
-        # Initialize legend
-        scatter.legend(title="Class", fontsize=12)
-        plt.title("UMAP Visualization of Predictions", fontsize=14, pad=20)
-        plt.xlabel("UMAP Component 1", fontsize=12)
-        plt.ylabel("UMAP Component 2", fontsize=12)
-        plt.grid(True, alpha=0.3)
-        plt.tight_layout()
+        # Style adjustments
+        ax.spines["left"].set_visible(True)
+        ax.spines["bottom"].set_visible(True)
+        ax.spines["right"].set_visible(True)
+        ax.spines["top"].set_visible(True)
 
+        # Set title and labels with enhanced styling
+        ax.set_title(
+            "UMAP Visualization of Predictions", pad=20, fontsize=14, fontweight="bold"
+        )
+        ax.set_xlabel("UMAP Component 1", fontsize=12)
+        ax.set_ylabel("UMAP Component 2", fontsize=12)
+
+        # Add legend with enhanced styling
+        ax.legend(title="Class", fontsize=12, title_fontsize=12)
+
+        # Save plot
         if umap_path:
-            # Save plot
-            plt.savefig(umap_path, dpi=300, bbox_inches="tight")
+            plt.savefig(umap_path, bbox_inches="tight", dpi=300)
         plt.close()
 
     # `save(self, filename)` -->

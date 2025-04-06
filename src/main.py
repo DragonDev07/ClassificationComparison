@@ -5,10 +5,10 @@ from utils.Datasets import load_mnist, load_tiny_imagenet
 
 def main():
     print("<< === Loading Data === >>")
-    print("--> Loading tiny-imagenet")
-    data = load_tiny_imagenet()
-    # print("--> Loading MNIST")
-    # data = load_mnist()
+    # print("--> Loading tiny-imagenet")
+    # data = load_tiny_imagenet()
+    print("--> Loading MNIST")
+    data = load_mnist()
 
     # Separate data into sets
     dataset_name = data["name"]
@@ -35,22 +35,26 @@ def main():
     print("--> Evaluating Model")
     clf_tree_evaluation = clf_tree.evaluate(X_test, y_test)
 
-    print("\n----- RESULTS -----")
+    print("\n----- CLASSIFICATION REPORT -----")
+    print(clf_tree_evaluation["classification_report"])
+
+    print("\n----- METRICS -----")
     print(f"Accuracy: {clf_tree_evaluation['accuracy']:.4f}")
     print(f"Precision: {clf_tree_evaluation['precision']:.4f}")
     print(f"Recall: {clf_tree_evaluation['recall']:.4f}")
     print(f"F1 Score: {clf_tree_evaluation['f1']:.4f}")
     print(f"Prediction Speed: {clf_tree_evaluation['prediction_speed']:.4f} seconds")
-    print("\nDetailed Classification Report:")
-    print(clf_tree_evaluation["classification_report"])
 
     # --------- CNN Deep Learning ---------- #
     print("<< === CNN Deep Learning === >>")
-    cnn = CNN(epochs=40, batch_size=64)
+    cnn = CNN(epochs=60, batch_size=64)
     cnn.dataset_name = dataset_name
 
-    print("--> Loading Model")
-    cnn.load()
+    print("--> Training Model")
+    cnn.train(X_train, y_train, X_val, y_val, metadata)
+
+    print("--> Saving Model")
+    cnn.save()
 
     print("--> Running Predictions")
     cnn_predictions = cnn.predict(X_test)
@@ -61,14 +65,15 @@ def main():
     print("--> Evaluating Model")
     cnn_evaluation = cnn.evaluate(X_test, y_test)
 
-    print("\n----- RESULTS -----")
+    print("\n----- CLASSIFICATION REPORT -----")
+    print(cnn_evaluation["classification_report"])
+
+    print("\n----- METRICS -----")
     print(f"Accuracy: {cnn_evaluation['accuracy']:.4f}")
     print(f"Precision: {cnn_evaluation['precision']:.4f}")
     print(f"Recall: {cnn_evaluation['recall']:.4f}")
     print(f"F1 Score: {cnn_evaluation['f1']:.4f}")
     print(f"Prediction Speed: {cnn_evaluation['prediction_speed']:.4f} seconds")
-    print("\nDetailed Classification Report:")
-    print(cnn_evaluation["classification_report"])
 
 
 if __name__ == "__main__":

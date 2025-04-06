@@ -127,14 +127,17 @@ class CNN:
     # `_preprocess_data(X)` -->
     #   - Preprocess data for training
     def _preprocess_data(self, X):
+        # Convert to numpy array if not already
+        X = np.array(X)
+
         # If data is flat (like MNIST), reshape appropriately
         if len(X.shape) == 2:  # Flat data
             channels, height, width = self.input_shape
             X = X.reshape(-1, channels, height, width)
-        else:  # Already in image format (N, H, W, C) like TinyImageNet
-            X = X.reshape(-1, *self.input_shape)
-            if len(X.shape) == 4:
-                X = X.transpose(0, 3, 1, 2)  # Convert from (N, H, W, C) to (N, C, H, W)
+        else:  # Image format (N, H, W, C) or (N, C, H, W)
+            if X.shape[-1] == self.input_shape[0]:  # If channels are last (N, H, W, C)
+                # Use np.transpose instead of .transpose
+                X = np.moveaxis(X, -1, 1)  # Move channels from last axis to axis 1
 
         # Normalize pixel values to [0,1]
         X = X.astype(np.float32) / 255.0
@@ -224,13 +227,17 @@ class CNN:
         results = {
             "accuracy": accuracy_score(all_targets, all_predictions),
             "precision": precision_score(
-                all_targets, all_predictions, average="weighted"
+                all_targets, all_predictions, average="weighted", zero_division=0
             ),
-            "recall": recall_score(all_targets, all_predictions, average="weighted"),
-            "f1": f1_score(all_targets, all_predictions, average="weighted"),
+            "recall": recall_score(
+                all_targets, all_predictions, average="weighted", zero_division=0
+            ),
+            "f1": f1_score(
+                all_targets, all_predictions, average="weighted", zero_division=0
+            ),
             "confusion_matrix": confusion_matrix(all_targets, all_predictions),
             "classification_report": classification_report(
-                all_targets, all_predictions
+                all_targets, all_predictions, zero_division=0
             ),
             "prediction_speed": self._measure_prediction_speed(X_test),
         }
@@ -258,49 +265,65 @@ class CNN:
 
         return np.concatenate(predictions)
 
-    # `generate_umap(X, predictions)` -->
-    #   - Generate and save UMAP visualization
+    # `generate_umap(X, predictions, save_path=None)` -->
+    #   - Generate UMAP visualization using seaborn
     def generate_umap(self, X, predictions):
+        # Get save path and setup number of classes
         _, umap_path = self._generate_paths()
+        unique_classes = np.unique(predictions)
+        n_classes = len(unique_classes)
 
-        # Reshape the array
-        X_flat = X.reshape(X.shape[0], -1)
+        # Initialize UMAP reducer and transform data
+        reducer = umap.UMAP(n_neighbors=15, min_dist=0.1, n_components=2)
+        umap_result = reducer.fit_transform(X)
 
-        reducer = umap.UMAP(
-            n_neighbors=15, min_dist=0.1, n_components=2, n_jobs=-1, random_state=42
+        # Setup style once
+        sns.set_style(
+            "darkgrid",
+            {
+                "axes.edgecolor": "0.2",
+                "axes.linewidth": 1.5,
+                "grid.color": "0.75",
+                "grid.linestyle": "-",
+            },
         )
-        X_umap = reducer.fit_transform(X_flat)
 
-        plt.figure(figsize=(12, 10), dpi=300)
-        scatter = sns.scatterplot(
-            x=X_umap[:, 0],
-            y=X_umap[:, 1],
+        # Create figure and plot
+        fig, ax = plt.subplots(figsize=(12, 10), dpi=300)
+
+        # Plot data
+        sns.scatterplot(
+            x=umap_result[:, 0],
+            y=umap_result[:, 1],
             hue=predictions,
-            palette="tab10",
+            palette="husl" if n_classes > 20 else "tab10",
             alpha=0.8,
             s=100,
             edgecolor="black",
             linewidth=0.5,
-            legend="full",
+            legend="auto",
+            ax=ax,
         )
 
-        # Adjust legend and labels
-        scatter.legend(title="Class", fontsize=12)
-        plt.title("UMAP Visualization of Predictions", fontsize=14, pad=20)
-        plt.xlabel("UMAP Component 1", fontsize=12)
-        plt.ylabel("UMAP Component 2", fontsize=12)
+        # Style adjustments
+        ax.spines["left"].set_visible(True)
+        ax.spines["bottom"].set_visible(True)
+        ax.spines["right"].set_visible(True)
+        ax.spines["top"].set_visible(True)
 
-        # Adjust the layout with specific spacing
-        plt.grid(True, alpha=0.3)
-        plt.subplots_adjust(
-            top=0.95,
-            bottom=0.1,
-            left=0.1,
-            right=0.9,
+        # Set title and labels with enhanced styling
+        ax.set_title(
+            "UMAP Visualization of Predictions", pad=20, fontsize=14, fontweight="bold"
         )
+        ax.set_xlabel("UMAP Component 1", fontsize=12)
+        ax.set_ylabel("UMAP Component 2", fontsize=12)
 
-        # Save the plot
-        plt.savefig(umap_path, dpi=300, bbox_inches="tight")
+        # Add legend with enhanced styling
+        ax.legend(title="Class", fontsize=12, title_fontsize=12)
+
+        # Save plot
+        if umap_path:
+            plt.savefig(umap_path, bbox_inches="tight", dpi=300)
         plt.close()
 
     # `save()` -->
