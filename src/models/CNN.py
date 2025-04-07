@@ -26,70 +26,78 @@ class CNNModel(nn.Module):
     def __init__(self, in_channels=1, num_classes=10):
         super(CNNModel, self).__init__()
 
-        # Layer 1: First Convolutional Layer
-        # Output channels: 32
-        # Kernel size: 3x3
-        # Stride: 1
-        # Padding: 1
-        # Output size: (28-3+1)x(28-3+1) = 26x26
-        self.conv1 = nn.Conv2d(in_channels, 32, 3, 1, padding=1)
+        # Initial number of filters
+        nf = 32
 
-        # Layer 2: Second Convolutional Layer
-        # Input channels: 32 (from previous layer)
-        # Output channels: 64
-        # Kernel size: 3x3
-        # Stride: 1
-        # Padding: 1
-        # Output size: (26-3+1)x(26-3+1) = 24x24
-        self.conv2 = nn.Conv2d(32, 64, 3, 1, padding=1)
+        # Feature Extraction Block 1
+        # Input: [batch, in_channels, height, width]
+        # Output: [batch, nf, height/2, width/2]
+        self.block1 = nn.Sequential(
+            nn.Conv2d(in_channels, nf, 3, padding=1),  # Maintains spatial dimensions
+            nn.BatchNorm2d(nf),  # Normalize activations
+            nn.ReLU(inplace=True),  # Activation function
+            nn.Conv2d(nf, nf, 3, padding=1),  # Second conv layer
+            nn.BatchNorm2d(nf),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(2),  # Reduce spatial dimensions by 2
+        )
 
-        # Dropout Layers
-        # Layer 3: First Dropout Layer (25% dropout)
-        self.dropout1 = nn.Dropout(0.25)
-        # Layer 5: Second Dropout Layer (50% dropout)
-        self.dropout2 = nn.Dropout(0.5)
+        # Feature Extraction Block 2
+        # Input: [batch, nf, height/2, width/2]
+        # Output: [batch, nf*2, height/4, width/4]
+        self.block2 = nn.Sequential(
+            nn.Conv2d(nf, nf * 2, 3, padding=1),
+            nn.BatchNorm2d(nf * 2),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(nf * 2, nf * 2, 3, padding=1),
+            nn.BatchNorm2d(nf * 2),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(2),
+        )
 
-        # Layer 4: First Fully Connected Layer
-        # Size will be calculated in forward pass
-        self.fc1 = None
+        # Feature Extraction Block 3
+        # Input: [batch, nf*2, height/4, width/4]
+        # Output: [batch, nf*4, height/8, width/8]
+        self.block3 = nn.Sequential(
+            nn.Conv2d(nf * 2, nf * 4, 3, padding=1),
+            nn.BatchNorm2d(nf * 4),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(nf * 4, nf * 4, 3, padding=1),
+            nn.BatchNorm2d(nf * 4),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(2),
+        )
 
-        # Layer 6: Second Fully Connected Layer (Output Layer)
-        # Input size: 128 neurons
-        # Output size: Number of Classes
-        self.fc2 = nn.Linear(128, num_classes)
+        # Adaptive pooling to handle different input sizes
+        # Output: [batch, nf*4, 4, 4]
+        self.adaptive_pool = nn.AdaptiveAvgPool2d((4, 4))
+
+        # Classifier layers
+        self.classifier = nn.Sequential(
+            nn.Dropout(0.5),  # Regularization
+            nn.Linear(nf * 4 * 4 * 4, 512),  # Fully connected layer
+            nn.ReLU(inplace=True),
+            nn.Dropout(0.5),
+            nn.Linear(512, num_classes),  # Output layer
+        )
 
     def forward(self, x):
-        # First Convolutional Block
-        x = self.conv1(x)  # Apply first conv layer
-        x = F.relu(x)  # Apply ReLU activation
+        # Pass input through feature extraction blocks
+        x = self.block1(x)
+        x = self.block2(x)
+        x = self.block3(x)
 
-        # Second Convolutional Block
-        x = self.conv2(x)  # Apply second conv layer
-        x = F.relu(x)  # Apply ReLU activation
-        x = F.max_pool2d(x, 2)  # Apply max pooling with 2x2 kernel
+        # Apply adaptive pooling
+        x = self.adaptive_pool(x)
 
-        # First Dropout
-        x = self.dropout1(x)  # Apply 25% dropout
+        # Flatten for fully connected layers
+        x = torch.flatten(x, 1)
 
-        # Flatten Layer
-        x = torch.flatten(x, 1)  # Flatten all dimensions except batch
+        # Pass through classifier
+        x = self.classifier(x)
 
-        # Initialize fc1 if not done yet (to handle different input sizes)
-        if self.fc1 is None:
-            self.fc1 = nn.Linear(x.shape[1], 128).to(x.device)
-
-        # First Fully Connected Layer
-        x = self.fc1(x)  # Apply first FC layer
-        x = F.relu(x)  # Apply ReLU activation
-
-        # Second Dropout
-        x = self.dropout2(x)  # Apply 50% dropout
-
-        # Output Layer
-        x = self.fc2(x)  # Apply second FC layer
-        output = F.log_softmax(x, dim=1)
-
-        return output
+        # Apply log softmax for numerical stability
+        return F.log_softmax(x, dim=1)
 
 
 class CNN:

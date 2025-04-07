@@ -5,10 +5,10 @@ from utils.Datasets import load_mnist, load_tiny_imagenet
 
 def main():
     print("<< === Loading Data === >>")
-    # print("--> Loading tiny-imagenet")
-    # data = load_tiny_imagenet()
-    print("--> Loading MNIST")
-    data = load_mnist()
+    print("--> Loading tiny-imagenet")
+    data = load_tiny_imagenet()
+    # print("--> Loading MNIST")
+    # data = load_mnist()
 
     # Separate data into sets
     dataset_name = data["name"]
@@ -18,44 +18,47 @@ def main():
     metadata = data["metadata"]
 
     # ---------- Classification Tree ---------- #
-    print("<< === Classification Tree === >>")
-    clf_tree = ClassificationTree(base_max_depth=3)
-    clf_tree.dataset_name = dataset_name
-    clf_tree.is_grid_search = False
+    # print("<< === Classification Tree === >>")
+    # clf_tree = ClassificationTree(base_max_depth=3)
+    # clf_tree.dataset_name = dataset_name
+    # clf_tree.is_grid_search = True
 
-    print("--> Loading Model")
-    clf_tree.load()
+    # print("--> Loading Model")
+    # clf_tree.load()
 
-    print("--> Running Predictions")
-    predictions = clf_tree.predict(X_test)
+    # print("--> Running Predictions")
+    # predictions = clf_tree.predict(X_test)
 
-    print("--> Generating UMAP")
-    clf_tree.generate_umap(X_test, predictions)
+    # print("--> Generating UMAP")
+    # clf_tree.generate_umap(X_test, predictions)
 
-    print("--> Evaluating Model")
-    clf_tree_evaluation = clf_tree.evaluate(X_test, y_test)
+    # print("--> Evaluating Model")
+    # clf_tree_evaluation = clf_tree.evaluate(X_test, y_test)
 
-    print("\n----- CLASSIFICATION REPORT -----")
-    print(clf_tree_evaluation["classification_report"])
+    # print("\n----- CLASSIFICATION REPORT -----")
+    # print(clf_tree_evaluation["classification_report"])
 
-    print("\n----- METRICS -----")
-    print(f"Accuracy: {clf_tree_evaluation['accuracy']:.4f}")
-    print(f"Precision: {clf_tree_evaluation['precision']:.4f}")
-    print(f"Recall: {clf_tree_evaluation['recall']:.4f}")
-    print(f"F1 Score: {clf_tree_evaluation['f1']:.4f}")
-    print(f"Prediction Speed: {clf_tree_evaluation['prediction_speed']:.4f} seconds")
+    # print("\n----- METRICS -----")
+    # print(f"Accuracy: {clf_tree_evaluation['accuracy']:.4f}")
+    # print(f"Precision: {clf_tree_evaluation['precision']:.4f}")
+    # print(f"Recall: {clf_tree_evaluation['recall']:.4f}")
+    # print(f"F1 Score: {clf_tree_evaluation['f1']:.4f}")
+    # print(f"Prediction Speed: {clf_tree_evaluation['prediction_speed']:.4f} seconds")
 
-    print("\n----- SYSTEM USAGE -----")
-    print(f"CPU Usage: {clf_tree_evaluation['cpu_usage']:.2f}%")
-    print(f"Memory Usage: {clf_tree_evaluation['memory_usage']:.2f} MB")
+    # print("\n----- SYSTEM USAGE -----")
+    # print(f"CPU Usage: {clf_tree_evaluation['cpu_usage']:.2f}%")
+    # print(f"Memory Usage: {clf_tree_evaluation['memory_usage']:.2f} MB")
 
     # --------- CNN Deep Learning ---------- #
     print("<< === CNN Deep Learning === >>")
-    cnn = CNN(epochs=60, batch_size=64)
+    cnn = CNN(epochs=20, batch_size=64)
     cnn.dataset_name = dataset_name
 
-    print("--> Loading Model")
-    cnn.load()
+    print("--> Training Model")
+    cnn.train(X_train, y_train, X_val, y_val, metadata)
+
+    print("--> Saving Model")
+    cnn.save()
 
     print("--> Running Predictions")
     cnn_predictions = cnn.predict(X_test)
