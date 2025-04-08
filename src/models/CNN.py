@@ -312,7 +312,7 @@ class CNN:
             hue=predictions,
             palette="husl" if n_classes > 20 else "tab10",
             alpha=0.8,
-            s=100,
+            s=25 if n_classes > 20 else 100,  # Dot Size
             edgecolor="black",
             linewidth=0.5,
             legend="auto",

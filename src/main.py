@@ -21,7 +21,7 @@ def main():
     # print("<< === Classification Tree === >>")
     # clf_tree = ClassificationTree(base_max_depth=3)
     # clf_tree.dataset_name = dataset_name
-    # clf_tree.is_grid_search = True
+    # clf_tree.is_grid_search = False
 
     # print("--> Loading Model")
     # clf_tree.load()
@@ -51,14 +51,11 @@ def main():
 
     # --------- CNN Deep Learning ---------- #
     print("<< === CNN Deep Learning === >>")
-    cnn = CNN(epochs=20, batch_size=64)
+    cnn = CNN(epochs=60, batch_size=64)
     cnn.dataset_name = dataset_name
 
-    print("--> Training Model")
-    cnn.train(X_train, y_train, X_val, y_val, metadata)
-
-    print("--> Saving Model")
-    cnn.save()
+    print("--> Loading Model")
+    cnn.load()
 
     print("--> Running Predictions")
     cnn_predictions = cnn.predict(X_test)
