@@ -1,6 +1,6 @@
 # Classification Model Comparison: Tree-Based vs. CNN
 
-Welcome to the LEARN.md document for the **ClassificationComparison** project. This repository stores all the code used to collect data and analyze models in my [research paper]().
+Welcome to the LEARN.md document for the **ClassificationComparison** project. This repository stores all the code used to collect data and analyze models in my [research paper](https://docs.google.com/document/d/1qSowpSr17cUdiwWvmYBX6CnXUgwzHt94F3baRRZh8is/edit?usp=sharing).
 
 ## Getting Started
 
@@ -105,7 +105,7 @@ The Convolutional Neural Network (CNN) Model is implemented in the `CNN.py` file
 
 ## Explore Further
 
-- Read the full paper [here]()
+- Read the full paper [here](https://docs.google.com/document/d/1qSowpSr17cUdiwWvmYBX6CnXUgwzHt94F3baRRZh8is/edit?usp=sharing)
 - Try tweaking:
   - Swap UMAP with t-SNE to compare dimensionality reduction techniques
   - Number of epochs for CNN
